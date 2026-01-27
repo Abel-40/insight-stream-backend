@@ -3,16 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.user import User
 from pydantic import EmailStr
 from uuid import UUID
-from pwdlib import PasswordHash
-
-
-password_hash = PasswordHash.recommended()
-def hash_password(password:str):
-  return password_hash.hash(password=password)
-
-def verify_password(entered_password:str,password_in_db:str):
-  return password_hash.verify(entered_password,password_in_db)
-
+from core.security import verify_password
 async def get_user_by_id(db:AsyncSession,id:UUID)-> User | None:
   stm = select(User).where(User.id == id)
   user = await db.scalar(stm)

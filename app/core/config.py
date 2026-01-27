@@ -6,6 +6,7 @@ class Settings(BaseSettings):
   DB_URL:str
   ACCESS_KEY:str
   REFRESH_KEY:str
+  ALGO:str
   class Config:
     env_file = BASE_URL/".env"
     
