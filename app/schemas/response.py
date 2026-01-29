@@ -19,3 +19,4 @@ I = TypeVar("I")
 class PaginatedResponse(BaseModel, Generic[I]):
   items:List[I]
   meta:PaginationMeta
+  

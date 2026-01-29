@@ -22,6 +22,7 @@ async def get_current_user(request:Request,token:Annotated[str,Depends(auth_sche
     user = await get_user_by_id(db=db,id=user_id)
     if not user:
       raise credentials_exception
+    request.state.user_id = user.id
     return user
   except PyJWTError as e:
     print("JWT ERROR TYPE:", type(e).__name__)

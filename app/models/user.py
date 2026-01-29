@@ -22,7 +22,7 @@ class User(Base):
   __tablename__="users"
   
   id:Mapped[UUID] = mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid.uuid4)
-  email:Mapped[str] = mapped_column(String(255),unique=True,nullable=False)
+  email:Mapped[str] = mapped_column(String(255),unique=True,nullable=False,index=True)
   full_name:Mapped[str] = mapped_column(String(255),nullable=True)
   hashed_password:Mapped[str] = mapped_column(String(255),nullable=True)
   is_premium:Mapped[bool] = mapped_column(Boolean,default=False)

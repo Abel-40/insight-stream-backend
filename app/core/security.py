@@ -1,6 +1,6 @@
 from pwdlib import PasswordHash
 from datetime import datetime,timedelta
-from core.config import settings
+from app.core.config import settings
 import jwt
 
 password_hash = PasswordHash.recommended()
