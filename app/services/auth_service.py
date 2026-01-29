@@ -16,7 +16,7 @@ async def get_user_by_email(db:AsyncSession,email:EmailStr)-> User | None:
   user = await db.scalar(stm)
   return user
 
-async def local_authenticate(db:AsyncSession, email:EmailStr,password:str):
+async def local_authenticate(db:AsyncSession, email:EmailStr,password:str)-> User | None:
   user = await get_user_by_email(db=db,email=email)
   if not user:
     return False
@@ -24,7 +24,7 @@ async def local_authenticate(db:AsyncSession, email:EmailStr,password:str):
     return False
   return user
 
-async def register_local_user(user_data:UserInForDb,db:AsyncSession):
+async def register_local_user(user_data:UserInForDb,db:AsyncSession) -> User:
   existing_email = (await db.scalars(
     select(User)
     .where(User.email == user_data.email)
@@ -42,24 +42,26 @@ async def register_local_user(user_data:UserInForDb,db:AsyncSession):
   
   return user
 
-async def login_with_third_party(user_data:ThirdPartyLogin,db:AsyncSession):
-  existing_auth_account = await db.scalars(
-    select(AuthAccount).where(provider=user_data.provider,provider_account_id=user_data.provider_account_id)
-  ).one_or_none()
+async def login_with_third_party(user_data:ThirdPartyLogin,db:AsyncSession) -> User:
+  existing_auth_account = (await db.execute(
+    select(AuthAccount).join(User).where(AuthAccount.provider==user_data.provider,AuthAccount.provider_account_id==user_data.provider_account_id,User.email == user_data.email)
+  )).scalar_one_or_none()
   if existing_auth_account:
     return existing_auth_account.user
-  user = User(email=user_data.email)
-  db.add(User)
-  await db.flush()
-  
-  await db.refresh(user)
+  user = await get_user_by_email(email=user_data.email,db=db)
+  if not user:
+    user = User(email=user_data.email)
+    db.add(User)
+    await db.flush()
+    await db.refresh(user)
+    
   auth_account = AuthAccount(provider=user_data.provider,provider_account_id=user_data.provider_account_id,user_id=user.id)
   db.add(auth_account)
   await db.commit()
   
   return user
 
-async def local_login(user_data:LocalLogin,db:AsyncSession):
+async def authenticate_local_user(user_data:LocalLogin,db:AsyncSession) -> User:
   user = await local_authenticate(email=user_data.email,password=user_data.password,db=db)
   if not user:
     raise InvalidCredentialsError

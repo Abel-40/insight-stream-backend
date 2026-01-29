@@ -10,7 +10,7 @@ from services.auth_service import get_user_by_id
 import jwt
 
 
-auth_scheme = OAuth2PasswordBearer(tokenUrl="login")
+auth_scheme = OAuth2PasswordBearer(tokenUrl="/login/local")
 
 async def get_current_user(request:Request,token:Annotated[str,Depends(auth_scheme)],db:AsyncSession = Depends(AsyncLocalSession)):
   credentials_exception = HTTPException(status_code=401,detail="Invalid Credentials!!!", headers = {"WWW-Authenticate":"Bearer"})

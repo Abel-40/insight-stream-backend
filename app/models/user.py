@@ -16,7 +16,7 @@ class AuthAccount(Base):
   user_id:Mapped[UUID] = mapped_column(UUID(as_uuid=True),ForeignKey("users.id",ondelete="CASCADE"),nullable=False)
   created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
   
-  user:Mapped["User"] = relationship("User",back_populates="auth_accounts")
+  user:Mapped["User"] = relationship("User",back_populates="auth_accounts",lazy="selectin")
 
 class User(Base):
   __tablename__="users"
