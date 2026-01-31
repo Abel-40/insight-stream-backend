@@ -43,7 +43,7 @@ async def third_party_login(user_data:ThirdPartyLogin,db:AsyncSession = Depends(
   }
   access_token = token_generator(data=data,expire=timedelta(hours=1),encryption_key=settings.ACCESS_KEY)
   refresh_token = token_generator(data={"sub":str(user.id),"type":"refresh"},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
-  response =  success_response(status_code=200,message="successfully login",data=TokenResponse(access_token=access_token,type="access").model_dump())
+  response =  success_response(status_code=200,message="successfully login",data=TokenResponse(access_token=access_token,token_type="Bearer").model_dump())
   response.set_cookie(
     key="refresh_token",
     value=refresh_token,
@@ -65,7 +65,7 @@ async def local_login(user_data:OAuth2PasswordRequestForm = Depends(),db:AsyncSe
     "type":"access"
     }
     access_token = token_generator(data=data,expire=timedelta(hours=1),encryption_key=settings.ACCESS_KEY)
-    refresh_token = token_generator(data={"sub":str(user.id)},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
+    refresh_token = token_generator(data={"sub":str(user.id),"type":"refresh"},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
     response = JSONResponse(
       status_code=200,
       content=TokenResponse(access_token=access_token,token_type="Bearer").model_dump()
@@ -99,8 +99,8 @@ async def refres_login(request:Request,db:AsyncSession = Depends(get_db)):
     "type":"access"
     }
     access_token = token_generator(data=data,expire=timedelta(hours=1),encryption_key=settings.ACCESS_KEY)
-    refresh_token = token_generator(data={"sub":str(user.id)},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
-    response =  success_response(status_code=200,message="login refreshed",data=TokenResponse(access_token=access_token,type="access").model_dump())
+    refresh_token = token_generator(data={"sub":str(user.id),"type":"refresh"},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
+    response =  success_response(status_code=200,message="login refreshed",data=TokenResponse(access_token=access_token,token_type="Bearer").model_dump())
     response.set_cookie(
       key="refresh_token",
       value=refresh_token,
@@ -112,9 +112,3 @@ async def refres_login(request:Request,db:AsyncSession = Depends(get_db)):
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Token")
     
   return response
-
-
-
-@router.get("/user/me")
-async def check(current_user:Annotated[User,Depends(get_current_user)]):
-  return {"email":current_user.email}

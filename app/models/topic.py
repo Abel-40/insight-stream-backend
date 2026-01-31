@@ -1,5 +1,5 @@
 from sqlalchemy.orm import mapped_column, Mapped,relationship
-from sqlalchemy import select, Integer, String, DateTime,ForeignKey,func,Table,Column
+from sqlalchemy import select, Integer, String, DateTime,ForeignKey,func,Table,Column,Boolean
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -21,7 +21,7 @@ class Topic(Base):
   id:Mapped[UUID] = mapped_column(UUID(as_uuid=True),primary_key=True,default=uuid.uuid4)
   name:Mapped[str] = mapped_column(String(255),unique=True)
   created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
-  
+  is_active:Mapped[bool] = mapped_column(Boolean,default=True)
   users:Mapped[List["User"]] = relationship("User",secondary=user_topics,back_populates="topics")
 
 

@@ -1,13 +1,13 @@
 from pydantic import BaseModel
-from typing import TypeVar,Generic,Any,Dict,List
+from typing import TypeVar,Generic,Any,Dict,List,Optional
 
 T = TypeVar("T")
 class APIResponse(BaseModel,Generic[T]):
   success:bool
   message:str
-  data:T | None = None
-  errors:str | Dict[str,Any] | None = None
-  meta: Dict[str,Any] | None = None
+  errors: Optional[Any] = None 
+  data: Optional[T] = None
+  meta: Optional[dict] = None
   
 class PaginationMeta(BaseModel):
   page:int
