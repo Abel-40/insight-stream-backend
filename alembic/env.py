@@ -1,6 +1,7 @@
 import asyncio
 from logging.config import fileConfig
-from app.models.user import Base
+from app.models.base import Base
+from app.models import user, topic
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config

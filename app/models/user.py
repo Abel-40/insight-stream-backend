@@ -3,10 +3,10 @@ from sqlalchemy.orm import Mapped, mapped_column,relationship
 from sqlalchemy import String,Integer,DateTime,Boolean,func,ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+from app.models.base import Base
+from app.models.topic import user_topics
 from typing import List
 import uuid
-
-Base = declarative_base()
 
 class AuthAccount(Base):
   __tablename__="auth_accounts"
@@ -29,6 +29,7 @@ class User(Base):
   created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
   
   auth_accounts:Mapped[List[AuthAccount]] = relationship("AuthAccount",back_populates="user",passive_deletes=True)
+  topics:Mapped[List["Topic"]] = relationship("Topic",secondary=user_topics,back_populates="users",lazy="selectin")
   
 
 
