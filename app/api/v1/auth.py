@@ -1,6 +1,7 @@
 from fastapi import APIRouter,Depends,HTTPException,status,Request
 from app.services.auth_service import register_local_user,login_with_third_party,authenticate_local_user,get_user_by_id
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from app.core.security import token_generator
 from app.core.config import settings
 from app.schemas.user import UserInForLocal, UserOut,UserInForDb,ThirdPartyLogin,LocalLogin
@@ -13,6 +14,9 @@ from app.dependencies.database import get_db
 from app.utils.response import success_response
 from datetime import timedelta
 from jwt.exceptions import InvalidTokenError
+from app.dependencies.auth import get_current_user
+from app.models.user import User
+from typing import Annotated
 import jwt
 
 router = APIRouter(prefix="/auth",tags=["auth"])
@@ -38,7 +42,7 @@ async def third_party_login(user_data:ThirdPartyLogin,db:AsyncSession = Depends(
   "type":"access"
   }
   access_token = token_generator(data=data,expire=timedelta(hours=1),encryption_key=settings.ACCESS_KEY)
-  refresh_token = token_generator(data={"sub":str(user.id)},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
+  refresh_token = token_generator(data={"sub":str(user.id),"type":"refresh"},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
   response =  success_response(status_code=200,message="successfully login",data=TokenResponse(access_token=access_token,type="access").model_dump())
   response.set_cookie(
     key="refresh_token",
@@ -51,7 +55,7 @@ async def third_party_login(user_data:ThirdPartyLogin,db:AsyncSession = Depends(
   return response
 
 
-@router.post("/login/local",response_model=APIResponse[TokenResponse])
+@router.post("/login/local",response_model=TokenResponse)
 async def local_login(user_data:OAuth2PasswordRequestForm = Depends(),db:AsyncSession = Depends(get_db)):#it accept user data as a form data not as a json type
   try:
     user = await authenticate_local_user(user_data=LocalLogin(email=user_data.username,password=user_data.password),db=db)
@@ -62,7 +66,10 @@ async def local_login(user_data:OAuth2PasswordRequestForm = Depends(),db:AsyncSe
     }
     access_token = token_generator(data=data,expire=timedelta(hours=1),encryption_key=settings.ACCESS_KEY)
     refresh_token = token_generator(data={"sub":str(user.id)},expire=timedelta(days=7),encryption_key=settings.REFRESH_KEY)
-    response =  success_response(status_code=200,message="successfully login",data=TokenResponse(access_token=access_token,type="access").model_dump())
+    response = JSONResponse(
+      status_code=200,
+      content=TokenResponse(access_token=access_token,token_type="Bearer").model_dump()
+    )
     response.set_cookie(
       key="refresh_token",
       value=refresh_token,
@@ -105,3 +112,9 @@ async def refres_login(request:Request,db:AsyncSession = Depends(get_db)):
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Invalid Token")
     
   return response
+
+
+
+@router.get("/user/me")
+async def check(current_user:Annotated[User,Depends(get_current_user)]):
+  return {"email":current_user.email}
